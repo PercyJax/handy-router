@@ -2,6 +2,12 @@
 
 A local routing service for [Handy](https://handy.computer) that intercepts speech-to-text transcriptions and routes them to different destinations based on a spoken wake word.
 
+## Why this exists
+
+Bought a new laptop. It has a Copilot key. Doesn't do anything on Linux.
+
+Figured I'd put it to use with Handy — say a wake word, route the transcription somewhere useful. Enhance text with an LLM, open a browser search, spin up an OpenCode session. Uses my [OpenCode Go](https://opencode.ai/go) subscription for the heavy lifting.
+
 ## What it does
 
 Handy transcribes your voice and pastes it into the focused text field. **handy-router** sits in between — it receives the transcription, checks for a wake word, and routes accordingly:
