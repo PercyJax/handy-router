@@ -1,0 +1,13 @@
+[Unit]
+Description=OpenCode Serve - headless opencode server
+After=graphical-session.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/Projects/OpenCode
+ExecStart=/usr/bin/opencode serve --port 11342 --hostname 127.0.0.1
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target

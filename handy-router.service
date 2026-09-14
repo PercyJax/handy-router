@@ -1,0 +1,12 @@
+[Unit]
+Description=Handy Router - speech-to-text routing service
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/handy-router
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target

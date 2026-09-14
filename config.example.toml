@@ -1,0 +1,44 @@
+# handy-router configuration
+#
+# Copy this file to ~/.config/handy-router/config.toml and edit as needed.
+# `make install` does this for you and prompts for the values below.
+
+[server]
+port = 11341
+host = "127.0.0.1"
+
+# Routing: prefix-based. Speak a wake word to route. No wake word = no-op.
+[routes.prefixes]
+transcribe = "enhance"  # "transcribe hello world" -> enhance via LLM, then paste
+gemini = "gemini"       # "gemini what is rust" -> opens Gemini in browser
+chat = "code"           # "chat write a regex" -> opens OpenCode in terminal
+
+[gemini]
+url_template = "https://gemini.google.com/app?q={query}"
+# Browser to launch. Leave empty to use the system default (xdg-open).
+# "firefox" + ["--new-window"] opens a fresh window that takes focus.
+browser = "firefox"
+browser_args = ["--new-window"]
+
+[opencode]
+binary = "opencode"
+terminal = "ghostty"       # your terminal emulator (kitty, alacritty, konsole, etc.)
+terminal_args = ["-e"]
+extra_args = []            # e.g. ["--model", "anthropic/claude-sonnet-4-20250514"]
+dir = "~/Projects/OpenCode"
+server_url = "http://127.0.0.1:11342"
+serve_dir = "~/Projects/OpenCode"
+
+[logging]
+level = "info"             # debug, info, warn, error
+
+# LLM enhancement for the "transcribe" route.
+[enhance]
+enabled = true
+endpoint = "https://opencode.ai/zen/go/v1/chat/completions"
+model = "deepseek-v4-flash"
+api_key = ""               # required — get yours at https://opencode.ai/go
+# Inject the enhanced text directly into the active window (works in terminals
+# and text boxes). Set Handy's paste method to "None" so it does not paste twice.
+paste = true
+paste_binary = "ydotool"

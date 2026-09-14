@@ -1,0 +1,14 @@
+# Built binary
+/handy-router
+
+# Local config — may contain API keys
+config.toml
+
+# Go build/test artifacts
+*.test
+*.out
+*.exe
+
+# Editor / OS cruft
+.DS_Store
+*.swp
