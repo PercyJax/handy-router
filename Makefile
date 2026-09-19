@@ -60,7 +60,7 @@ install: build
 	@echo ""
 	@echo "Next steps:"
 	@echo "  1. Edit config if needed:  nano $(CONFIG_DIR)/config.toml"
-	@echo "  2. Enable both services:   make enable && make opencode-serve-enable"
+	@echo "  2. Enable both services:   make enable"
 	@echo "  3. Configure Handy:"
 	@echo "     - Provider:   Custom"
 	@echo "     - Base URL:   http://localhost:11341/v1"
@@ -68,7 +68,25 @@ install: build
 	@echo "     - Prompt:     \$\{output\}"
 	@echo ""
 
-reinstall: uninstall install
+reinstall:
+	@hr_enabled=$$(systemctl --user is-enabled handy-router.service 2>/dev/null || true); \
+	oc_enabled=$$(systemctl --user is-enabled opencode-serve.service 2>/dev/null || true); \
+	$(MAKE) uninstall; \
+	$(MAKE) install; \
+	if [ "$$hr_enabled" = "enabled" ]; then \
+		echo ""; \
+		echo "Restoring handy-router.service (was enabled)"; \
+		systemctl --user enable handy-router.service; \
+		systemctl --user start handy-router.service; \
+	fi; \
+	if [ "$$oc_enabled" = "enabled" ]; then \
+		echo ""; \
+		echo "Restoring opencode-serve.service (was enabled)"; \
+		systemctl --user enable opencode-serve.service; \
+		systemctl --user start opencode-serve.service; \
+	fi; \
+	echo ""; \
+	echo "Reinstall complete (enabled state restored)."
 
 uninstall: disable opencode-serve-disable
 	sudo rm -f $(INSTALL_DIR)/$(BINARY)
@@ -80,12 +98,14 @@ uninstall: disable opencode-serve-disable
 	@echo "To remove config: rm -rf $(CONFIG_DIR)"
 	@echo ""
 
-# handy-router service
+# Enable both services
 enable:
 	systemctl --user enable handy-router.service
 	systemctl --user start handy-router.service
-	@echo "Service enabled and started."
-	@echo "Check status: make status"
+	systemctl --user enable opencode-serve.service
+	systemctl --user start opencode-serve.service
+	@echo "Both services enabled and started."
+	@echo "Check status: make status && make opencode-serve-status"
 	@echo "Check logs:   journalctl --user -u handy-router -f"
 
 disable:
