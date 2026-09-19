@@ -42,3 +42,5 @@ api_key = ""               # required — get yours at https://opencode.ai/go
 # and text boxes). Set Handy's paste method to "None" so it does not paste twice.
 paste = true
 paste_binary = "ydotool"
+key_delay = 5              # delay in ms between keystrokes (default: 20, set lower for speed)
+key_delay = 10             # delay in ms between keystrokes (default: 20, halved for speed)

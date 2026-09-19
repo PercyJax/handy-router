@@ -17,7 +17,8 @@ Handy transcribes your voice and pastes it into the focused text field. **handy-
 | `"transcribe hello world"` | Enhances the text via LLM, types it into the active window, and hands it back to Handy |
 | `"gemini what is rust"` | Opens Gemini in your browser with "what is rust" |
 | `"chat write a regex for emails"` | Starts an OpenCode session with the prompt, then opens a TUI attached to it |
-| `"hello world"` | No wake word — **no-op**, nothing is pasted |
+| `"hello world"` | No wake word — types the raw transcription into the active window |
+| `"cancel cancel cancel"` | Three cancels in a row — **no-op**, nothing is typed |
 
 ## How it works
 
@@ -32,7 +33,9 @@ For the `transcribe` route, the router enhances the transcription through a conf
 
 > **Important:** Set Handy's paste method to **None** so it does not paste a second time. The router does the injection; Handy only sees the returned text (and can copy it to the clipboard per its clipboard handling setting).
 
-With no wake word, the router returns an empty response so Handy is a no-op.
+With no wake word, the router types the raw transcription directly into the active window using `ydotool`.
+
+If ydotool starts typing something you didn't want, you can stop it immediately by running `pkill -f ydotool` in a terminal, or say "cancel" in your next transcription to prevent the next paste.
 
 ## OpenCode integration
 
@@ -159,6 +162,7 @@ model = "deepseek-v4-flash"
 api_key = ""               # your OpenCode Go API key
 paste = true               # type the enhanced text into the active window
 paste_binary = "ydotool"   # typing tool (ydotool)
+key_delay = 5              # delay in ms between keystrokes (default: 20)
 ```
 
 ### LLM Enhancement
@@ -171,6 +175,7 @@ The `[enhance]` section controls the `transcribe` route:
 - **enabled**: Set to `false` to skip enhancement (raw text is returned as-is)
 - **paste**: When `true`, the enhanced text is typed into the active window via `paste_binary`
 - **paste_binary**: Path/name of the typing tool (default `ydotool`)
+- **key_delay**: Delay in milliseconds between keystrokes (default `20`, set to `5` for fast typing)
 
 If the LLM call fails (no API key, network error), the raw transcription is used instead.
 

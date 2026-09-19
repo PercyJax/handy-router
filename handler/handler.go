@@ -170,7 +170,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// to "None" so it does not paste a second time; the text is still
 		// returned below so Handy can place it on the clipboard.
 		if h.Config.Enhance.Paste {
-			if err := actions.TypeText(query, h.Config.Enhance.PasteBinary); err != nil {
+			if err := actions.TypeText(query, h.Config.Enhance.PasteBinary, h.Config.Enhance.KeyDelay); err != nil {
 				log.Printf("Failed to type text into active window: %v", err)
 			} else {
 				log.Printf("Typed enhanced text into active window")
@@ -181,9 +181,22 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.addHistory("enhance", route.Query)
 
 	default:
-		log.Printf("No wake word matched, no-op")
-		responseContent = ""
-		h.addHistory("default", route.Query)
+		if router.IsCancel(route.Query) {
+			log.Printf("Cancel detected, no-op")
+			responseContent = ""
+			h.addHistory("cancel", route.Query)
+		} else {
+			log.Printf("No wake word matched, pasting raw transcription")
+			if h.Config.Enhance.Paste {
+				if err := actions.TypeText(route.Query, h.Config.Enhance.PasteBinary, h.Config.Enhance.KeyDelay); err != nil {
+					log.Printf("Failed to type text into active window: %v", err)
+				} else {
+					log.Printf("Typed raw transcription into active window")
+				}
+			}
+			responseContent = route.Query
+			h.addHistory("default", route.Query)
+		}
 	}
 
 	resp := ChatCompletionResponse{
@@ -230,7 +243,8 @@ th { color: #00d4ff; }
 <tr><th>Prefix</th><th>Destination</th></tr>
 <tr><td class="route">gemini</td><td>Browser (Gemini)</td></tr>
 <tr><td class="route">code</td><td>Terminal (OpenCode)</td></tr>
-<tr><td class="route">(none)</td><td>Default paste</td></tr>
+<tr><td class="route">(none)</td><td>Default paste (raw transcription)</td></tr>
+<tr><td class="route">cancel</td><td>No-op (aborts transcription)</td></tr>
 </table>
 
 <h2>Recent History</h2>

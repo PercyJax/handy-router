@@ -45,6 +45,7 @@ type EnhanceConfig struct {
 	APIKey      string `toml:"api_key"`
 	Paste       bool   `toml:"paste"`
 	PasteBinary string `toml:"paste_binary"`
+	KeyDelay    int    `toml:"key_delay"`
 }
 
 type Config struct {
@@ -93,6 +94,7 @@ func DefaultConfig() *Config {
 			APIKey:      "",
 			Paste:       true,
 			PasteBinary: "ydotool",
+			KeyDelay:    1,
 		},
 	}
 }

@@ -11,6 +11,28 @@ type Route struct {
 	Query string
 }
 
+// IsCancel returns true if "cancel" appears three or more times in a row
+// (accounting for punctuation the transcription model might add).
+// e.g. "cancel cancel cancel", "Cancel, Cancel, Cancel", "I said cancel cancel cancel!"
+func IsCancel(text string) bool {
+	words := strings.Fields(strings.ToLower(text))
+	cancelRun := 0
+	for _, w := range words {
+		w = strings.TrimFunc(w, func(r rune) bool {
+			return !unicode.IsLetter(r) && !unicode.IsDigit(r)
+		})
+		if w == "cancel" {
+			cancelRun++
+			if cancelRun >= 3 {
+				return true
+			}
+		} else {
+			cancelRun = 0
+		}
+	}
+	return false
+}
+
 func ParseRoute(transcription string, prefixes map[string]string) Route {
 	text := strings.TrimSpace(transcription)
 	lower := strings.ToLower(text)
