@@ -48,13 +48,18 @@ type EnhanceConfig struct {
 	KeyDelay    int    `toml:"key_delay"`
 }
 
+type IndicatorConfig struct {
+	Enabled bool `toml:"enabled"`
+}
+
 type Config struct {
-	Server   ServerConfig   `toml:"server"`
-	Routes   RoutesConfig   `toml:"routes"`
-	Gemini   GeminiConfig   `toml:"gemini"`
-	OpenCode OpenCodeConfig `toml:"opencode"`
-	Enhance  EnhanceConfig  `toml:"enhance"`
-	Logging  LoggingConfig  `toml:"logging"`
+	Server    ServerConfig    `toml:"server"`
+	Routes    RoutesConfig    `toml:"routes"`
+	Gemini    GeminiConfig    `toml:"gemini"`
+	OpenCode  OpenCodeConfig  `toml:"opencode"`
+	Enhance   EnhanceConfig   `toml:"enhance"`
+	Logging   LoggingConfig   `toml:"logging"`
+	Indicator IndicatorConfig `toml:"indicator"`
 }
 
 func DefaultConfig() *Config {
@@ -95,6 +100,9 @@ func DefaultConfig() *Config {
 			Paste:       true,
 			PasteBinary: "ydotool",
 			KeyDelay:    1,
+		},
+		Indicator: IndicatorConfig{
+			Enabled: false,
 		},
 	}
 }

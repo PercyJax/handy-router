@@ -163,6 +163,9 @@ api_key = ""               # your OpenCode Go API key
 paste = true               # type the enhanced text into the active window
 paste_binary = "ydotool"   # typing tool (ydotool)
 key_delay = 5              # delay in ms between keystrokes (default: 20)
+
+[indicator]
+enabled = false            # show colored border around screen (red=recording, blue=processing)
 ```
 
 ### LLM Enhancement
@@ -228,15 +231,51 @@ Open `http://localhost:11341` in your browser to see:
 - Active route prefixes
 - Recent transcription history
 
+## Indicator (D-Bus notifications)
+
+The indicator feature shows native KDE desktop notifications when Handy's state changes:
+
+- **"Recording..."** — Handy is listening for speech
+- **"Processing..."** — handy-router is enhancing text
+
+This uses D-Bus signals from Handy's tray icon to detect state changes event-driven (no polling).
+
+### Setup
+
+1. Enable in config (`~/.config/handy-router/config.toml`):
+   ```toml
+   [indicator]
+   enabled = true
+   ```
+
+2. Restart the service:
+   ```bash
+   make restart
+   ```
+
+### How it works
+
+1. **D-Bus listener** subscribes to `NewIcon` signals from Handy's StatusNotifierItem
+2. When Handy's tray icon changes (ear → recording, brain → processing), the listener detects it
+3. The listener sends a native desktop notification via `org.freedesktop.Notifications`
+
+### Requirements
+
+- Linux with D-Bus session bus (standard on KDE Plasma)
+- No additional dependencies — uses system D-Bus
+
 ## Platform support
 
 Primary target: **Linux / Arch / KDE Plasma (Wayland)**.
 
-| Platform | Browser | Terminal | Text injection | Notes |
-|----------|---------|----------|----------------|-------|
-| Linux (KDE/Arch) | `firefox` / `xdg-open` | configurable | `ydotool` | Primary target |
-| Linux (other) | `xdg-open` | configurable | `ydotool` | Should work |
-| macOS | `open` | configurable | not implemented | Untested |
+> **Note:** Windows and Mac integrations are not tested at all whatsoever. The indicator feature (border overlay) is Linux-only.
+
+| Platform | Browser | Terminal | Text injection | Indicator | Notes |
+|----------|---------|----------|----------------|-----------|-------|
+| Linux (KDE/Arch) | `firefox` / `xdg-open` | configurable | `ydotool` | D-Bus notifications | Primary target |
+| Linux (other) | `xdg-open` | configurable | `ydotool` | D-Bus notifications | Should work |
+| macOS | `open` | configurable | not implemented | not implemented | Untested |
+| Windows | configurable | configurable | not implemented | not implemented | Untested |
 
 The `transcribe` route injects text via `ydotool`, which is Linux-only. On other platforms, set `paste = false` and let Handy paste instead.
 

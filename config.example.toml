@@ -43,4 +43,8 @@ api_key = ""               # required — get yours at https://opencode.ai/go
 paste = true
 paste_binary = "ydotool"
 key_delay = 5              # delay in ms between keystrokes (default: 20, set lower for speed)
-key_delay = 10             # delay in ms between keystrokes (default: 20, halved for speed)
+
+# Visual indicator: shows native KDE desktop notifications on state change.
+[indicator]
+enabled = false            # set to true to enable D-Bus notifications
+# Shows "Recording..." when Handy is recording, "Processing..." when processing.
