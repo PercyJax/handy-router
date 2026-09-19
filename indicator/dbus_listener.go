@@ -123,38 +123,62 @@ func (l *DBusListener) findHandyService() (string, string, error) {
 	return "", "", fmt.Errorf("Handy not found on D-Bus")
 }
 
-func (l *DBusListener) queryAndDetermineState() State {
+func (l *DBusListener) ensureHandy() bool {
+	if l.handyName != "" && l.handyPath != "" {
+		return true
+	}
+
+	name, path, err := l.findHandyService()
+	if err != nil {
+		return false
+	}
+
+	l.handyName, l.handyPath = name, path
+	log.Printf("Found Handy at %s%s", name, path)
+	return true
+}
+
+func (l *DBusListener) queryAndDetermineState() (State, bool) {
 	if l.handyName == "" || l.handyPath == "" {
-		return StateIdle
+		return StateIdle, false
 	}
 
 	obj := l.conn.Object(l.handyName, dbus.ObjectPath(l.handyPath))
 	call := obj.Call("org.freedesktop.DBus.Properties.Get", 0,
 		"org.kde.StatusNotifierItem", "IconName")
 	if call.Err != nil {
-		return StateIdle
+		return StateIdle, false
 	}
 
 	var iconPath string
 	if err := call.Store(&iconPath); err != nil {
-		return StateIdle
+		return StateIdle, false
 	}
 
 	data, err := os.ReadFile(iconPath)
 	if err != nil {
-		return StateIdle
+		return StateIdle, false
 	}
 
 	sig := computeSignature(data)
 	if state, ok := knownIcons[sig]; ok {
-		return state
+		return state, true
 	}
 
-	return StateIdle
+	return StateIdle, true
 }
 
 func (l *DBusListener) handleStateChange() {
-	newState := l.queryAndDetermineState()
+	if !l.ensureHandy() {
+		return
+	}
+
+	newState, ok := l.queryAndDetermineState()
+	if !ok {
+		l.handyName = ""
+		l.handyPath = ""
+		return
+	}
 
 	l.mu.Lock()
 	oldState := l.state
@@ -187,6 +211,22 @@ func (l *DBusListener) Start() error {
 	err = l.conn.AddMatchSignal(
 		dbus.WithMatchInterface("org.kde.StatusNotifierItem"),
 		dbus.WithMatchMember("NewIcon"),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to add match: %w", err)
+	}
+
+	err = l.conn.AddMatchSignal(
+		dbus.WithMatchInterface("org.kde.StatusNotifierWatcher"),
+		dbus.WithMatchMember("StatusNotifierItemRegistered"),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to add match: %w", err)
+	}
+
+	err = l.conn.AddMatchSignal(
+		dbus.WithMatchInterface("org.kde.StatusNotifierWatcher"),
+		dbus.WithMatchMember("StatusNotifierItemUnregistered"),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to add match: %w", err)
