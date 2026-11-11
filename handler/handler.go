@@ -180,6 +180,27 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		responseContent = query
 		h.addHistory("enhance", route.Query)
 
+	case "translate":
+		parsed := router.ParseTranslateQuery(route.Query)
+		if parsed.Language == "" {
+			log.Printf("Translate: no target language specified")
+			responseContent = route.Query
+		} else {
+			query := parsed.Text
+			if h.Config.Enhance.Enabled {
+				translated, err := llm.Translate(parsed.Text, parsed.Language, h.Config.Enhance.Endpoint, h.Config.Enhance.Model, h.Config.Enhance.APIKey)
+				if err != nil {
+					log.Printf("Translation failed, using raw text: %v", err)
+				} else {
+					query = translated
+					log.Printf("Translated to %s: %q -> %q", parsed.Language, parsed.Text, query)
+				}
+			}
+
+			responseContent = query
+		}
+		h.addHistory("translate", route.Query)
+
 	default:
 		if router.IsCancel(route.Query) {
 			log.Printf("Cancel detected, no-op")
@@ -243,6 +264,7 @@ th { color: #00d4ff; }
 <tr><th>Prefix</th><th>Destination</th></tr>
 <tr><td class="route">gemini</td><td>Browser (Gemini)</td></tr>
 <tr><td class="route">code</td><td>Terminal (OpenCode)</td></tr>
+<tr><td class="route">translate</td><td>Translate to target language (returned to Handy)</td></tr>
 <tr><td class="route">(none)</td><td>Default paste (raw transcription)</td></tr>
 <tr><td class="route">cancel</td><td>No-op (aborts transcription)</td></tr>
 </table>

@@ -33,6 +33,34 @@ func IsCancel(text string) bool {
 	return false
 }
 
+// TranslateQuery holds the parsed result of a "translate <text> to <language>" command.
+type TranslateQuery struct {
+	Text     string
+	Language string
+}
+
+// ParseTranslateQuery splits a translate query into the source text and target language.
+// It looks for the last " to <language>" token. If not found, Language is empty.
+// e.g. "hello world to french" -> ("hello world", "french")
+// "I want to go to spanish" -> ("I want to go", "spanish")
+// "hello world" -> ("hello world", "")
+func ParseTranslateQuery(query string) TranslateQuery {
+	lower := strings.ToLower(query)
+	idx := strings.LastIndex(lower, " to ")
+	if idx <= 0 {
+		return TranslateQuery{Text: strings.TrimSpace(query)}
+	}
+
+	text := strings.TrimSpace(query[:idx])
+	lang := strings.TrimSpace(query[idx+len(" to "):])
+
+	if text == "" || lang == "" {
+		return TranslateQuery{Text: query}
+	}
+
+	return TranslateQuery{Text: text, Language: lang}
+}
+
 func ParseRoute(transcription string, prefixes map[string]string) Route {
 	text := strings.TrimSpace(transcription)
 	lower := strings.ToLower(text)

@@ -73,6 +73,7 @@ func DefaultConfig() *Config {
 				"transcribe": "enhance",
 				"gemini":     "gemini",
 				"chat":       "code",
+				"translate":  "translate",
 			},
 		},
 		Gemini: GeminiConfig{

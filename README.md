@@ -17,6 +17,7 @@ Handy transcribes your voice and pastes it into the focused text field. **handy-
 | `"transcribe hello world"` | Enhances the text via LLM, types it into the active window, and hands it back to Handy |
 | `"gemini what is rust"` | Opens Gemini in your browser with "what is rust" |
 | `"chat write a regex for emails"` | Starts an OpenCode session with the prompt, then opens a TUI attached to it |
+| `"translate hello world to french"` | Translates "hello world" to French via LLM, returns it to Handy (no direct typing — ydotool can't handle CJK characters) |
 | `"hello world"` | No wake word — types the raw transcription into the active window |
 | `"cancel cancel cancel"` | Three cancels in a row — **no-op**, nothing is typed |
 
@@ -25,7 +26,7 @@ Handy transcribes your voice and pastes it into the focused text field. **handy-
 handy-router exposes an OpenAI-compatible `/v1/chat/completions` endpoint. Handy's **Custom post-processing provider** sends transcriptions to this endpoint. The router:
 
 1. Extracts the raw transcription from the request
-2. Matches a wake word (`transcribe`, `gemini`, `chat`, or none)
+2. Matches a wake word (`transcribe`, `gemini`, `chat`, `translate`, or none)
 3. Routes to the appropriate destination
 4. Returns the response to Handy
 
@@ -137,6 +138,7 @@ host = "127.0.0.1"
 transcribe = "enhance"  # "transcribe ..." -> enhance via LLM, then paste
 gemini = "gemini"       # "gemini ..." -> open Gemini
 chat = "code"           # "chat ..." -> open OpenCode
+translate = "translate" # "translate ... to <lang>" -> translate via LLM, then paste
 
 [gemini]
 url_template = "https://gemini.google.com/app?q={query}"

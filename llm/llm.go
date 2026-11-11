@@ -48,6 +48,66 @@ type completionResponse struct {
 	Choices []completionChoice `json:"choices"`
 }
 
+const translateSystemPrompt = `You are a translator. Translate the user's text into the specified target language.
+
+Rules:
+- Translate ONLY the text provided, preserving its meaning exactly
+- Do not add explanations, notes, or any extra text
+- Do not output the language name or any prefix — just the translated text
+- If the target language is the same as the source language, clean up the text like a transcript fixer (fix spelling, punctuation) and return it
+- Return only the translated text, nothing else`
+
+func Translate(text, language, endpoint, model, apiKey string) (string, error) {
+	userContent := fmt.Sprintf("Translate the following text to %s:\n\n%s", language, text)
+	body := completionRequest{
+		Model:  model,
+		Stream: false,
+		Messages: []message{
+			{Role: "system", Content: translateSystemPrompt},
+			{Role: "user", Content: userContent},
+		},
+	}
+
+	jsonBody, err := json.Marshal(body)
+	if err != nil {
+		return "", fmt.Errorf("marshal request: %w", err)
+	}
+
+	req, err := http.NewRequest("POST", endpoint, bytes.NewReader(jsonBody))
+	if err != nil {
+		return "", fmt.Errorf("create request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	if apiKey != "" {
+		req.Header.Set("Authorization", "Bearer "+apiKey)
+	}
+	b := make([]byte, 16)
+	rand.Read(b)
+	req.Header.Set("x-opencode-session", hex.EncodeToString(b))
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("llm request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		respBody, _ := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("llm api error %d: %s", resp.StatusCode, string(respBody))
+	}
+
+	var result completionResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", fmt.Errorf("decode response: %w", err)
+	}
+
+	if len(result.Choices) == 0 {
+		return "", fmt.Errorf("no choices in response")
+	}
+
+	return result.Choices[0].Message.Content, nil
+}
+
 func Enhance(text, endpoint, model, apiKey string) (string, error) {
 	body := completionRequest{
 		Model:  model,
